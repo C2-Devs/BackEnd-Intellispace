@@ -3,7 +3,7 @@ services:
     image: postgres:16
     environment:
       POSTGRES_DB: IntelliSpace
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: Samarth@3232
+      POSTGRES_USER: postgresxx
+      POSTGRES_PASSWORD: xxxxx
     ports:
       - "5432:5432"
