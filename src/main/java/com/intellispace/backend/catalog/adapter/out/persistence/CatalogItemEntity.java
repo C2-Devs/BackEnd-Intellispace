@@ -104,4 +104,34 @@ public class CatalogItemEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Builder
+    public CatalogItemEntity(String slug, String name, String category, String description, String modelPath,
+                             Double baseWidth, Double baseDepth, Double baseHeight,
+                             double defaultScaleX, double defaultScaleY, double defaultScaleZ,
+                             double defaultRotX, double defaultRotY, double defaultRotZ,
+                             double snapHeight, BigDecimal price, String currency,
+                             String style, String material, String color, String roomType) {
+        this.slug = slug;
+        this.name = name;
+        this.category = category;
+        this.description = description;
+        this.modelPath = modelPath;
+        this.baseWidth = baseWidth;
+        this.baseDepth = baseDepth;
+        this.baseHeight = baseHeight;
+        this.defaultScaleX = defaultScaleX;
+        this.defaultScaleY = defaultScaleY;
+        this.defaultScaleZ = defaultScaleZ;
+        this.defaultRotX = defaultRotX;
+        this.defaultRotY = defaultRotY;
+        this.defaultRotZ = defaultRotZ;
+        this.snapHeight = snapHeight;
+        this.price = price;
+        this.currency = currency;
+        this.style = style;
+        this.material = material;
+        this.color = color;
+        this.roomType = roomType;
+    }
+
 }

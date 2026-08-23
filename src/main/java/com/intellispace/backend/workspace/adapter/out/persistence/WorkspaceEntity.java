@@ -22,7 +22,6 @@ public class WorkspaceEntity {
 
     @EqualsAndHashCode.Include
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "user_id", nullable = false)
@@ -86,6 +85,26 @@ public class WorkspaceEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-
+    @Builder
+    public WorkspaceEntity(UUID userId, String name, String description, String roomType, String designStyle,
+                           double roomWidth, double roomDepth, double roomHeight, double wallThickness,
+                           String wallColor, String floorColor, String ceilingColor, String lightPreset,
+                           BigDecimal budget, String currency) {
+        this.userId = userId;
+        this.name = name;
+        this.description = description;
+        this.roomType = roomType;
+        this.designStyle = designStyle;
+        this.roomWidth = roomWidth;
+        this.roomDepth = roomDepth;
+        this.roomHeight = roomHeight;
+        this.wallThickness = wallThickness;
+        this.wallColor = wallColor;
+        this.floorColor = floorColor;
+        this.ceilingColor = ceilingColor;
+        this.lightPreset = lightPreset;
+        this.budget = budget;
+        this.currency = currency;
+    }
 
 }
