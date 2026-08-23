@@ -40,4 +40,11 @@ public class AppUserEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Builder
+    public AppUserEntity(String email, String passwordHash, String displayName) {
+        this.email = email;
+        this.passwordHash = passwordHash;
+        this.displayName = displayName;
+    }
+
 }

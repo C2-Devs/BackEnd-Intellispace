@@ -65,5 +65,26 @@ public class WorkspaceFurnitureEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-
+    @Builder
+    public WorkspaceFurnitureEntity(UUID workspaceId, UUID catalogItemId,
+                                    double posX, double posY, double posZ,
+                                    double rotX, double rotY, double rotZ,
+                                    double scaleX, double scaleY, double scaleZ,
+                                    boolean locked, boolean visible,
+                                    Map<String, Object> materialOverrides) {
+        this.workspaceId = workspaceId;
+        this.catalogItemId = catalogItemId;
+        this.posX = posX;
+        this.posY = posY;
+        this.posZ = posZ;
+        this.rotX = rotX;
+        this.rotY = rotY;
+        this.rotZ = rotZ;
+        this.scaleX = scaleX;
+        this.scaleY = scaleY;
+        this.scaleZ = scaleZ;
+        this.locked = locked;
+        this.visible = visible;
+        this.materialOverrides = materialOverrides;
+    }
 }

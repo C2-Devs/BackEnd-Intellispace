@@ -1,7 +1,7 @@
 package com.intellispace.backend.workspace.adapter.out.persistence;
 
-import com.intellispace.backend.workspace.domain.ArchitecturalType;
-import com.intellispace.backend.workspace.domain.WallSide;
+import com.intellispace.backend.workspace.domain.Enum.ArchitecturalType;
+import com.intellispace.backend.workspace.domain.Enum.WallSide;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -61,5 +61,17 @@ public class WorkspaceArchitectureEntity {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
+
+    @Builder
+    public WorkspaceArchitectureEntity(UUID workspaceId, ArchitecturalType elementType, WallSide wall,
+                                       double wallPosition, double width, double height, double sillHeight) {
+        this.workspaceId = workspaceId;
+        this.elementType = elementType;
+        this.wall = wall;
+        this.wallPosition = wallPosition;
+        this.width = width;
+        this.height = height;
+        this.sillHeight = sillHeight;
+    }
 
 }
