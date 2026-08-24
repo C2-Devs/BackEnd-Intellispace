@@ -16,7 +16,6 @@ import java.util.UUID;
 @Getter
 @Setter
 @ToString
-@Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -24,7 +23,7 @@ public class WorkspaceFurnitureEntity {
 
     @EqualsAndHashCode.Include
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    // id is always supplied by the domain — no @GeneratedValue here.
     private UUID id;
 
     @Column(name = "workspace_id", nullable = false)
@@ -33,28 +32,26 @@ public class WorkspaceFurnitureEntity {
     @Column(name = "catalog_item_id", nullable = false)
     private UUID catalogItemId;
 
-    @Builder.Default @Column(name = "pos_x", nullable = false) private double posX = 0.0;
-    @Builder.Default @Column(name = "pos_y", nullable = false) private double posY = 0.0;
-    @Builder.Default @Column(name = "pos_z", nullable = false) private double posZ = 0.0;
+    @Column(name = "pos_x", nullable = false) private double posX;
+    @Column(name = "pos_y", nullable = false) private double posY;
+    @Column(name = "pos_z", nullable = false) private double posZ;
 
-    @Builder.Default @Column(name = "rot_x", nullable = false) private double rotX = 0.0;
-    @Builder.Default @Column(name = "rot_y", nullable = false) private double rotY = 0.0;
-    @Builder.Default @Column(name = "rot_z", nullable = false) private double rotZ = 0.0;
+    @Column(name = "rot_x", nullable = false) private double rotX;
+    @Column(name = "rot_y", nullable = false) private double rotY;
+    @Column(name = "rot_z", nullable = false) private double rotZ;
 
-    @Builder.Default @Column(name = "scale_x", nullable = false) private double scaleX = 1.0;
-    @Builder.Default @Column(name = "scale_y", nullable = false) private double scaleY = 1.0;
-    @Builder.Default @Column(name = "scale_z", nullable = false) private double scaleZ = 1.0;
+    @Column(name = "scale_x", nullable = false) private double scaleX;
+    @Column(name = "scale_y", nullable = false) private double scaleY;
+    @Column(name = "scale_z", nullable = false) private double scaleZ;
 
-    @Builder.Default
     @Column(name = "is_locked", nullable = false)
-    private boolean locked = false;
+    private boolean locked;
 
-    @Builder.Default
     @Column(name = "is_visible", nullable = false)
-    private boolean visible = true;
+    private boolean visible;
 
     @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "material_overrides", columnDefinition = "jsonb")
+    @Column(name = "material_overrides", columnDefinition = "jsonb") // renamed from material_override in V2 migration
     private Map<String, Object> materialOverrides;
 
     @CreationTimestamp
@@ -65,6 +62,10 @@ public class WorkspaceFurnitureEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    /**
+     * The single, constructor-level builder. Does NOT include id, createdAt, updatedAt —
+     * those are managed externally (id set via setId() by the mapper; timestamps by Hibernate).
+     */
     @Builder
     public WorkspaceFurnitureEntity(UUID workspaceId, UUID catalogItemId,
                                     double posX, double posY, double posZ,

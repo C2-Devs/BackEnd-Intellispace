@@ -1,5 +1,6 @@
 package com.intellispace.backend.workspace.adapter.out.persistence;
 
+
 import com.intellispace.backend.workspace.domain.*;
 import com.intellispace.backend.workspace.domain.Record.Money;
 import com.intellispace.backend.workspace.domain.Record.RoomAppearance;
@@ -10,8 +11,7 @@ import org.springframework.stereotype.Component;
 public class WorkspaceMapper {
 
     public WorkspaceEntity toNewEntity(Workspace workspace) {
-        return WorkspaceEntity.builder()
-                .id(workspace.getId())
+        WorkspaceEntity entity = WorkspaceEntity.builder()
                 .userId(workspace.getOwnerId())
                 .name(workspace.getName())
                 .description(workspace.getDescription())
@@ -28,6 +28,8 @@ public class WorkspaceMapper {
                 .budget(workspace.getBudget().map(Money::amount).orElse(null))
                 .currency(workspace.getBudget().map(Money::currency).orElse("INR"))
                 .build();
+        entity.setId(workspace.getId()); // id is managed by the domain, not Hibernate
+        return entity;
     }
 
     public WorkspaceEntity updateEntity(WorkspaceEntity existing, Workspace workspace) {
@@ -55,6 +57,7 @@ public class WorkspaceMapper {
                 entity.getCeilingColor(), entity.getLightPreset());
         Money budget = entity.getBudget() != null ? new Money(entity.getBudget(), entity.getCurrency()) : null;
         return Workspace.reconstruct(entity.getId(), entity.getUserId(), entity.getName(), entity.getDescription(),
-                entity.getRoomType(), entity.getDesignStyle(), geometry, appearance, budget);
+                entity.getRoomType(), entity.getDesignStyle(), geometry, appearance, budget, entity.getVersion());
     }
+
 }

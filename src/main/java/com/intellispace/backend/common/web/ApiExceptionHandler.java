@@ -1,10 +1,9 @@
 package com.intellispace.backend.common.web;
 
+import com.intellispace.backend.identity.domain.EmailAlreadyRegisteredException;
+import com.intellispace.backend.identity.domain.InvalidCredentialsException;
 import com.intellispace.backend.workspace.domain.*;
-import com.intellispace.backend.workspace.domain.exception.CatalogItemNotFoundException;
-import com.intellispace.backend.workspace.domain.exception.FurnitureLockedException;
-import com.intellispace.backend.workspace.domain.exception.FurnitureNotFoundException;
-import com.intellispace.backend.workspace.domain.exception.WorkspaceNotFoundException;
+import com.intellispace.backend.workspace.domain.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -13,6 +12,20 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+
+    // ── Identity ──────────────────────────────────────────────────────────────
+
+    @ExceptionHandler(EmailAlreadyRegisteredException.class)
+    public ProblemDetail handleEmailAlreadyRegistered(EmailAlreadyRegisteredException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ProblemDetail handleInvalidCredentials(InvalidCredentialsException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    // ── Workspace ─────────────────────────────────────────────────────────────
 
     @ExceptionHandler(WorkspaceNotFoundException.class)
     public ProblemDetail handleWorkspaceNotFound(WorkspaceNotFoundException ex) {
@@ -46,5 +59,16 @@ public class ApiExceptionHandler {
         problem.setProperty("errors", ex.getBindingResult().getFieldErrors().stream()
                 .map(e -> e.getField() + ": " + e.getDefaultMessage()).toList());
         return problem;
+    }
+
+    @ExceptionHandler(StaleWorkspaceException.class)
+    public ProblemDetail handleStaleWorkspace(StaleWorkspaceException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(org.springframework.orm.ObjectOptimisticLockingFailureException.class)
+    public ProblemDetail handleConcurrentModification(org.springframework.orm.ObjectOptimisticLockingFailureException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+                "This workspace was modified by another request at the same moment. Reload and try again.");
     }
 }

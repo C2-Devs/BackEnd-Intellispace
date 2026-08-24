@@ -1,0 +1,26 @@
+-------------------------------------------------------------------------------
+Test set: com.intellispace.backend.workspace.application.service.WorkspaceApplicationServiceIT
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.025 s <<< FAILURE! -- in com.intellispace.backend.workspace.application.service.WorkspaceApplicationServiceIT
+com.intellispace.backend.workspace.application.service.WorkspaceApplicationServiceIT.updateWorkspace_rejectsAStaleClientSubmittedVersion -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.NoClassDefFoundError: Could not initialize class com.intellispace.backend.testsupport.PostgresIntegrationTest
+	at java.base/jdk.internal.misc.Unsafe.ensureClassInitialized0(Native Method)
+	at java.base/jdk.internal.misc.Unsafe.ensureClassInitialized(Unsafe.java:1160)
+	at java.base/java.lang.reflect.Constructor.acquireConstructorAccessor(Constructor.java:549)
+	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:499)
+	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:486)
+	at java.base/java.util.Optional.orElseGet(Optional.java:364)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+Caused by: java.lang.ExceptionInInitializerError: Exception java.lang.IllegalStateException: Could not find a valid Docker environment. Please see logs and check configuration [in thread "main"]
+	at org.testcontainers.dockerclient.DockerClientProviderStrategy.lambda$getFirstValidStrategy$7(DockerClientProviderStrategy.java:277)
+	at java.base/java.util.Optional.orElseThrow(Optional.java:403)
+	at org.testcontainers.dockerclient.DockerClientProviderStrategy.getFirstValidStrategy(DockerClientProviderStrategy.java:268)
+	at org.testcontainers.DockerClientFactory.getOrInitializeStrategy(DockerClientFactory.java:152)
+	at org.testcontainers.DockerClientFactory.client(DockerClientFactory.java:194)
+	at org.testcontainers.DockerClientFactory$1.getDockerClient(DockerClientFactory.java:106)
+	at com.github.dockerjava.api.DockerClientDelegate.authConfig(DockerClientDelegate.java:109)
+	at org.testcontainers.containers.GenericContainer.start(GenericContainer.java:329)
+	at com.intellispace.backend.testsupport.PostgresIntegrationTest.<clinit>(PostgresIntegrationTest.java:14)
+	... 8 more
+

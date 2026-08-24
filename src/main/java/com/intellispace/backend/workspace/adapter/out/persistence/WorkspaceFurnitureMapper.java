@@ -9,13 +9,15 @@ import org.springframework.stereotype.Component;
 public class WorkspaceFurnitureMapper {
 
     public WorkspaceFurnitureEntity toNewEntity(WorkspaceFurniture f) {
-        return WorkspaceFurnitureEntity.builder()
-                .id(f.getId()).workspaceId(f.getWorkspaceId()).catalogItemId(f.getCatalogItemId())
+        WorkspaceFurnitureEntity entity = WorkspaceFurnitureEntity.builder()
+                .workspaceId(f.getWorkspaceId()).catalogItemId(f.getCatalogItemId())
                 .posX(f.getPosition().x()).posY(f.getPosition().y()).posZ(f.getPosition().z())
                 .rotX(f.getRotation().x()).rotY(f.getRotation().y()).rotZ(f.getRotation().z())
                 .scaleX(f.getScale().x()).scaleY(f.getScale().y()).scaleZ(f.getScale().z())
                 .locked(f.isLocked()).visible(f.isVisible()).materialOverrides(f.getMaterialOverrides())
                 .build();
+        entity.setId(f.getId()); // id is managed by the domain, not Hibernate
+        return entity;
     }
 
     public WorkspaceFurnitureEntity updateEntity(WorkspaceFurnitureEntity existing, WorkspaceFurniture f) {

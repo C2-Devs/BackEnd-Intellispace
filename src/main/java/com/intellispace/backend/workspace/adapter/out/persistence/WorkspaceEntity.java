@@ -9,7 +9,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
-@Builder
 @Entity
 @Table(name = "workspace")
 @Getter
@@ -22,6 +21,7 @@ public class WorkspaceEntity {
 
     @EqualsAndHashCode.Include
     @Id
+    // id is always supplied by the domain — no @GeneratedValue here.
     private UUID id;
 
     @Column(name = "user_id", nullable = false)
@@ -48,9 +48,8 @@ public class WorkspaceEntity {
     @Column(name = "room_height", nullable = false)
     private double roomHeight;
 
-    @Builder.Default
     @Column(name = "wall_thickness", nullable = false)
-    private double wallThickness = 0.15;
+    private double wallThickness;
 
     @Column(name = "wall_color", nullable = false, length = 7)
     private String wallColor;
@@ -61,16 +60,14 @@ public class WorkspaceEntity {
     @Column(name = "ceiling_color", nullable = false, length = 7)
     private String ceilingColor;
 
-    @Builder.Default
     @Column(name = "light_preset", nullable = false, length = 50)
-    private String lightPreset = "day";
+    private String lightPreset;
 
     @Column(precision = 12, scale = 2)
     private BigDecimal budget;
 
-    @Builder.Default
     @Column(length = 3)
-    private String currency = "INR";
+    private String currency;
 
     /** Hibernate-managed optimistic-lock counter. Never a constructor/builder parameter. */
     @Version
@@ -85,6 +82,10 @@ public class WorkspaceEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    /**
+     * The single, constructor-level builder. Does NOT include id, version, createdAt, updatedAt —
+     * those are managed externally (id set via setId() by the mapper; others managed by Hibernate).
+     */
     @Builder
     public WorkspaceEntity(UUID userId, String name, String description, String roomType, String designStyle,
                            double roomWidth, double roomDepth, double roomHeight, double wallThickness,

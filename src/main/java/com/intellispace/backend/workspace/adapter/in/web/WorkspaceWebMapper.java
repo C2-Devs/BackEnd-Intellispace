@@ -17,7 +17,14 @@ public class WorkspaceWebMapper {
         RoomAppearance appearance = new RoomAppearance(r.appearance().wallColor(), r.appearance().floorColor(),
                 r.appearance().ceilingColor(), r.appearance().lightPreset());
         Money budget = r.budget() != null ? new Money(r.budget(), r.currency()) : null;
-        return new CreateWorkspaceCommand(ownerId, r.name(), r.description(), r.roomType(), r.designStyle(), geometry, appearance, budget);
+        return new CreateWorkspaceCommand(ownerId, r.name(), r.description(), r.roomType(), r.designStyle(), geometry, appearance, budget );
+    }
+    public UpdateWorkspaceCommand toCommand(UpdateWorkspaceRequest r) {
+        RoomAppearance appearance = r.appearance() != null
+                ? new RoomAppearance(r.appearance().wallColor(), r.appearance().floorColor(), r.appearance().ceilingColor(), r.appearance().lightPreset())
+                : null;
+        Money budget = r.budget() != null ? new Money(r.budget(), r.currency()) : null;
+        return new UpdateWorkspaceCommand(r.name(), appearance, budget, r.expectedVersion());
     }
 
     public WorkspaceSummaryResponse toSummaryResponse(Workspace w) {
@@ -33,6 +40,7 @@ public class WorkspaceWebMapper {
                 new WorkspaceDetailResponse.AppearanceDto(a.wallColor(), a.floorColor(), a.ceilingColor(), a.lightPreset()),
                 w.getBudget().map(Money::amount).orElse(null),
                 w.getBudget().map(Money::currency).orElse(null),
+                w.getVersion(),
                 furniture.stream().map(this::toResponse).toList(),
                 List.of()
         );
@@ -61,4 +69,5 @@ public class WorkspaceWebMapper {
                 f.isLocked(), f.isVisible(), f.getMaterialOverrides()
         );
     }
+
 }

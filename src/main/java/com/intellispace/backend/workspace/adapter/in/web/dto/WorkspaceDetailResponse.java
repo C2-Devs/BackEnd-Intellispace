@@ -7,7 +7,7 @@ import java.util.UUID;
 public record WorkspaceDetailResponse(
         UUID id, String name, String description,
         RoomDto room, AppearanceDto appearance,
-        BigDecimal budget, String currency,
+        BigDecimal budget, String currency, int version,
         List<WorkspaceFurnitureResponse> furniture,
         List<Object> architecture // always [] until WorkspaceArchitecture's ports exist
 ) {

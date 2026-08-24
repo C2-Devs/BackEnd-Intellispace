@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.intellispace.backend.workspace.domain.Vector3Test
+-------------------------------------------------------------------------------
+Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.141 s -- in com.intellispace.backend.workspace.domain.Vector3Test

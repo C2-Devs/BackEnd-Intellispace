@@ -17,7 +17,6 @@ import java.util.UUID;
 @Getter
 @Setter
 @ToString
-@Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -25,7 +24,7 @@ public class WorkspaceArchitectureEntity {
 
     @EqualsAndHashCode.Include
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    // id is always supplied by the domain — no @GeneratedValue here.
     private UUID id;
 
     @Column(name = "workspace_id", nullable = false)
@@ -50,9 +49,8 @@ public class WorkspaceArchitectureEntity {
     @Column(nullable = false)
     private double height;
 
-    @Builder.Default
     @Column(name = "sill_height", nullable = false)
-    private double sillHeight = 0.0;
+    private double sillHeight;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -62,6 +60,10 @@ public class WorkspaceArchitectureEntity {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    /**
+     * The single, constructor-level builder. Does NOT include id, createdAt, updatedAt.
+     * id is set via setId() by the mapper; timestamps are managed by Hibernate.
+     */
     @Builder
     public WorkspaceArchitectureEntity(UUID workspaceId, ArchitecturalType elementType, WallSide wall,
                                        double wallPosition, double width, double height, double sillHeight) {
