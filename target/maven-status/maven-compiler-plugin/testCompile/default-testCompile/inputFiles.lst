@@ -1,0 +1,12 @@
+/Users/samarthnarayankar/Downloads/BackEnd IntelliSpace/src/test/java/com/intellispace/backend/testsupport/PostgresIntegrationTest.java
+/Users/samarthnarayankar/Downloads/BackEnd IntelliSpace/src/test/java/com/intellispace/backend/workspace/adapter/in/web/WorkspaceApiIT.java
+/Users/samarthnarayankar/Downloads/BackEnd IntelliSpace/src/test/java/com/intellispace/backend/workspace/adapter/out/persistence/JsonbAndNativeEnumMappingIT.java
+/Users/samarthnarayankar/Downloads/BackEnd IntelliSpace/src/test/java/com/intellispace/backend/workspace/adapter/out/persistence/OptimisticLockingIT.java
+/Users/samarthnarayankar/Downloads/BackEnd IntelliSpace/src/test/java/com/intellispace/backend/workspace/application/service/WorkspaceApplicationServiceIT.java
+/Users/samarthnarayankar/Downloads/BackEnd IntelliSpace/src/test/java/com/intellispace/backend/workspace/domain/MoneyTest.java
+/Users/samarthnarayankar/Downloads/BackEnd IntelliSpace/src/test/java/com/intellispace/backend/workspace/domain/RoomAppearanceTest.java
+/Users/samarthnarayankar/Downloads/BackEnd IntelliSpace/src/test/java/com/intellispace/backend/workspace/domain/RoomGeometryTest.java
+/Users/samarthnarayankar/Downloads/BackEnd IntelliSpace/src/test/java/com/intellispace/backend/workspace/domain/Scale3Test.java
+/Users/samarthnarayankar/Downloads/BackEnd IntelliSpace/src/test/java/com/intellispace/backend/workspace/domain/Vector3Test.java
+/Users/samarthnarayankar/Downloads/BackEnd IntelliSpace/src/test/java/com/intellispace/backend/workspace/domain/WorkspaceFurnitureTest.java
+/Users/samarthnarayankar/Downloads/BackEnd IntelliSpace/src/test/java/com/intellispace/backend/workspace/domain/WorkspaceTest.java

@@ -30,9 +30,8 @@ public class WorkspaceFurnitureApplicationService implements
     }
 
     @Override
-    public WorkspaceFurniture addFurniture(AddFurnitureCommand command) {
-        workspaceRepository.findById(command.workspaceId())
-                .orElseThrow(() -> new WorkspaceNotFoundException(command.workspaceId()));
+    public WorkspaceFurniture addFurniture(UUID requestingUserId, AddFurnitureCommand command) {
+        requireOwnedWorkspace(command.workspaceId(), requestingUserId);
         if (!catalogItemLookupPort.exists(command.catalogItemId())) {
             throw new CatalogItemNotFoundException(command.catalogItemId());
         }
@@ -42,41 +41,51 @@ public class WorkspaceFurnitureApplicationService implements
     }
 
     @Override
-    public WorkspaceFurniture updateFurniturePlacement(UUID furnitureId, UpdateFurniturePlacementCommand command) {
-        WorkspaceFurniture furniture = furnitureRepository.findById(furnitureId)
-                .orElseThrow(() -> new FurnitureNotFoundException(furnitureId));
+    public WorkspaceFurniture updateFurniturePlacement(UUID requestingUserId, UUID workspaceId, UUID furnitureId,
+                                                       UpdateFurniturePlacementCommand command) {
+        requireOwnedWorkspace(workspaceId, requestingUserId);
+        WorkspaceFurniture furniture = requireFurnitureInWorkspace(furnitureId, workspaceId);
 
-        // Transforms first, lock state second — deliberately. A single PATCH can legally carry
-        // both a final position AND locked:true ("move it here, then lock it"). Reversing this
-        // order would make that request fail: moveTo() rejects a furniture that's already locked.
         if (command.position() != null) furniture.moveTo(command.position());
         if (command.rotation() != null) furniture.rotateTo(command.rotation());
         if (command.scale() != null) furniture.scaleTo(command.scale());
-        if (command.locked() != null) {
-            if (command.locked()) furniture.lock(); else furniture.unlock();
-        }
-        if (command.visible() != null) {
-            if (command.visible()) furniture.show(); else furniture.hide();
-        }
+        if (command.locked() != null) { if (command.locked()) furniture.lock(); else furniture.unlock(); }
+        if (command.visible() != null) { if (command.visible()) furniture.show(); else furniture.hide(); }
         if (command.materialOverrides() != null) furniture.updateMaterialOverrides(command.materialOverrides());
 
         return furnitureRepository.save(furniture);
     }
 
     @Override
-    public void removeFurniture(UUID furnitureId) {
-        // Checked explicitly rather than calling deleteById() straight away: Spring Data's
-        // deleteById() throws EmptyResultDataAccessException on a missing row, which would leak
-        // a Spring-internal exception type up through this port instead of our own domain exception.
-        if (furnitureRepository.findById(furnitureId).isEmpty()) {
-            throw new FurnitureNotFoundException(furnitureId);
-        }
+    public void removeFurniture(UUID workspaceId, UUID furnitureId, UUID requestingUserId) {
+        requireOwnedWorkspace(workspaceId, requestingUserId);
+        requireFurnitureInWorkspace(furnitureId, workspaceId);
         furnitureRepository.deleteById(furnitureId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<WorkspaceFurniture> listFurniture(UUID workspaceId) {
+    public List<WorkspaceFurniture> listFurniture(UUID workspaceId, UUID requestingUserId) {
+        requireOwnedWorkspace(workspaceId, requestingUserId);
         return furnitureRepository.findAllByWorkspaceId(workspaceId);
+    }
+
+    private Workspace requireOwnedWorkspace(UUID workspaceId, UUID requestingUserId) {
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new WorkspaceNotFoundException(workspaceId));
+        if (!workspace.getOwnerId().equals(requestingUserId)) {
+            throw new WorkspaceNotFoundException(workspaceId);
+        }
+        return workspace;
+    }
+
+    private WorkspaceFurniture requireFurnitureInWorkspace(UUID furnitureId, UUID workspaceId) {
+        WorkspaceFurniture furniture = furnitureRepository.findById(furnitureId)
+                .orElseThrow(() -> new FurnitureNotFoundException(furnitureId));
+        if (!furniture.getWorkspaceId().equals(workspaceId)) {
+            // Treat "wrong workspace" identically to "doesn't exist" — same reasoning as ownership above.
+            throw new FurnitureNotFoundException(furnitureId);
+        }
+        return furniture;
     }
 }

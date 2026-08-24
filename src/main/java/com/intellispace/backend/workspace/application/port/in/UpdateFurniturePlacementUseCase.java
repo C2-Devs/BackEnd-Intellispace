@@ -5,5 +5,5 @@ import com.intellispace.backend.workspace.domain.WorkspaceFurniture;
 import java.util.UUID;
 
 public interface UpdateFurniturePlacementUseCase {
-    WorkspaceFurniture updateFurniturePlacement(UUID furnitureId, UpdateFurniturePlacementCommand command);
+    WorkspaceFurniture updateFurniturePlacement(UUID requestingUserId, UUID workspaceId, UUID furnitureId, UpdateFurniturePlacementCommand command);
 }

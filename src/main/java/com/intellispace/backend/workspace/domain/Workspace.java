@@ -18,9 +18,10 @@ public class Workspace {
     private RoomGeometry geometry;
     private RoomAppearance appearance;
     private Money budget;
+    private final int version;
 
     private Workspace(UUID id, UUID ownerId, String name, String description, String roomType,
-                      String designStyle, RoomGeometry geometry, RoomAppearance appearance, Money budget) {
+                      String designStyle, RoomGeometry geometry, RoomAppearance appearance, Money budget, int version) {
         this.id = requireNonNull(id, "id");
         this.ownerId = requireNonNull(ownerId, "ownerId");
         this.name = requireName(name);
@@ -30,19 +31,22 @@ public class Workspace {
         this.geometry = requireNonNull(geometry, "geometry");
         this.appearance = requireNonNull(appearance, "appearance");
         this.budget = budget;
+        this.version = version;
     }
 
     /** A brand-new workspace. Assigns its own identity — see the note below. */
     public static Workspace create(UUID ownerId, String name, String description, String roomType,
                                    String designStyle, RoomGeometry geometry, RoomAppearance appearance, Money budget) {
-        return new Workspace(UUID.randomUUID(), ownerId, name, description, roomType, designStyle, geometry, appearance, budget);
+        return new Workspace(UUID.randomUUID(), ownerId, name, description, roomType, designStyle, geometry, appearance, budget,0);
     }
 
     /** Rehydrates a workspace persistence already knows about. Called only by the persistence mapper (Step 4). */
     public static Workspace reconstruct(UUID id, UUID ownerId, String name, String description, String roomType,
-                                        String designStyle, RoomGeometry geometry, RoomAppearance appearance, Money budget) {
-        return new Workspace(id, ownerId, name, description, roomType, designStyle, geometry, appearance, budget);
+                                        String designStyle, RoomGeometry geometry, RoomAppearance appearance, Money budget, int version) {
+        return new Workspace(id, ownerId, name, description, roomType, designStyle, geometry, appearance, budget,version);
     }
+
+    public int getVersion() { return version; }
 
     public void rename(String newName) {
         this.name = requireName(newName);

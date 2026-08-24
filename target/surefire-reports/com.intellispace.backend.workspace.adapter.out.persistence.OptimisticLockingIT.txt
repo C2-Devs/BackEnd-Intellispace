@@ -1,0 +1,16 @@
+-------------------------------------------------------------------------------
+Test set: com.intellispace.backend.workspace.adapter.out.persistence.OptimisticLockingIT
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.001 s <<< FAILURE! -- in com.intellispace.backend.workspace.adapter.out.persistence.OptimisticLockingIT
+com.intellispace.backend.workspace.adapter.out.persistence.OptimisticLockingIT -- Time elapsed: 0.001 s <<< ERROR!
+java.lang.NoClassDefFoundError: TestEntityManager
+	at java.base/java.lang.Class.getDeclaredFields0(Native Method)
+	at java.base/java.lang.Class.privateGetDeclaredFields(Class.java:3496)
+	at java.base/java.lang.Class.getDeclaredFields(Class.java:2552)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1597)
+Caused by: java.lang.ClassNotFoundException: TestEntityManager
+	at java.base/jdk.internal.loader.BuiltinClassLoader.loadClass(BuiltinClassLoader.java:641)
+	at java.base/jdk.internal.loader.ClassLoaders$AppClassLoader.loadClass(ClassLoaders.java:188)
+	at java.base/java.lang.ClassLoader.loadClass(ClassLoader.java:525)
+	... 4 more
+

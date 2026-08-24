@@ -37,7 +37,7 @@ public class CatalogItemEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "model_path", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "model_path", columnDefinition = "TEXT")
     private String modelPath;
 
     @Column(name = "base_width")

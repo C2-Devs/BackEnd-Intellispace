@@ -17,15 +17,17 @@ public class WorkspaceController {
 
     private final CreateWorkspaceUseCase createWorkspaceUseCase;
     private final GetWorkspaceUseCase getWorkspaceUseCase;
+    private final UpdateWorkspaceUseCase updateWorkspaceUseCase;
     private final ListWorkspacesUseCase listWorkspacesUseCase;
     private final ListFurnitureForWorkspaceUseCase listFurnitureForWorkspaceUseCase;
     private final WorkspaceWebMapper mapper;
 
-    public WorkspaceController(CreateWorkspaceUseCase createWorkspaceUseCase, GetWorkspaceUseCase getWorkspaceUseCase,
+    public WorkspaceController(CreateWorkspaceUseCase createWorkspaceUseCase, GetWorkspaceUseCase getWorkspaceUseCase, UpdateWorkspaceUseCase updateWorkspaceUseCase,
                                ListWorkspacesUseCase listWorkspacesUseCase,
                                ListFurnitureForWorkspaceUseCase listFurnitureForWorkspaceUseCase, WorkspaceWebMapper mapper) {
         this.createWorkspaceUseCase = createWorkspaceUseCase;
         this.getWorkspaceUseCase = getWorkspaceUseCase;
+        this.updateWorkspaceUseCase = updateWorkspaceUseCase;
         this.listWorkspacesUseCase = listWorkspacesUseCase;
         this.listFurnitureForWorkspaceUseCase = listFurnitureForWorkspaceUseCase;
         this.mapper = mapper;
@@ -43,10 +45,18 @@ public class WorkspaceController {
         return listWorkspacesUseCase.listWorkspacesForOwner(ownerId).stream().map(mapper::toSummaryResponse).toList();
     }
 
+    // WorkspaceController — new endpoint, plus @CurrentUserId added to the two methods that lacked it:
     @GetMapping("/{workspaceId}")
-    public WorkspaceDetailResponse getOne(@PathVariable UUID workspaceId) {
-        Workspace workspace = getWorkspaceUseCase.getWorkspace(workspaceId);
-        var furniture = listFurnitureForWorkspaceUseCase.listFurniture(workspaceId);
+    public WorkspaceDetailResponse getOne(@PathVariable UUID workspaceId, @CurrentUserId UUID userId) {
+        Workspace workspace = getWorkspaceUseCase.getWorkspace(workspaceId, userId);
+        var furniture = listFurnitureForWorkspaceUseCase.listFurniture(workspaceId, userId);
         return mapper.toDetailResponse(workspace, furniture);
+    }
+    @PatchMapping("/{workspaceId}")
+    public WorkspaceDetailResponse update(@PathVariable UUID workspaceId, @CurrentUserId UUID userId,
+                                          @Valid @RequestBody UpdateWorkspaceRequest request) {
+        Workspace updated = updateWorkspaceUseCase.updateWorkspace(workspaceId, userId, mapper.toCommand(request));
+        var furniture = listFurnitureForWorkspaceUseCase.listFurniture(workspaceId, userId);
+        return mapper.toDetailResponse(updated, furniture);
     }
 }
