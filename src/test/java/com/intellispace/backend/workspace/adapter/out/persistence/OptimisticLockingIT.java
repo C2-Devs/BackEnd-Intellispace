@@ -2,7 +2,7 @@ package com.intellispace.backend.workspace.adapter.out.persistence;
 
 import com.intellispace.backend.testsupport.PostgresIntegrationTest;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureTestDatabase;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +11,7 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.springframework.boot.test.autoconfigure.orm.jpa.AutoConfigureTestDatabase.Replace.NONE;
+import static org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase.Replace.NONE;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = NONE)
@@ -23,10 +23,11 @@ class OptimisticLockingIT extends PostgresIntegrationTest {
     @Test
     void hibernateVersionCheck_rejectsAConcurrentlyStaleWrite() {
         WorkspaceEntity fresh = WorkspaceEntity.builder()
-                .id(UUID.randomUUID()).userId(UUID.randomUUID()).name("Original")
+                .userId(UUID.randomUUID()).name("Original")
                 .roomWidth(4).roomDepth(5).roomHeight(2.7).wallThickness(0.15)
                 .wallColor("#FFFFFF").floorColor("#8B5A2B").ceilingColor("#FFFFFF")
                 .build();
+        fresh.setId(UUID.randomUUID());
         UUID id = jpaRepository.saveAndFlush(fresh).getId();
         entityManager.clear();
 
