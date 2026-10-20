@@ -1,71 +1,64 @@
-# Workspace API contract (Task 1)
+# Workspace API contract
 
-Source of truth: checked-in Java controllers, DTOs, services, persistence mappings, and `V1__create_core_schema.sql`/`V2__schema_corrections.sql`.
+Source of truth: the checked-in Java controllers, DTOs, services, persistence mappings, and Flyway migrations. This document describes the current repository state; it is not a contract for the deployed Render service.
 
-## Authentication and errors
+## Runtime and cross-cutting behavior
 
-All `/api/workspaces/**` routes require `Authorization: Bearer <JWT>`. Unauthenticated requests return Spring Security's `401 Unauthorized` response. Application errors use RFC 7807 `ProblemDetail` JSON (`type`, `title`, `status`, optional `detail`, and validation `errors`). Validation failures are `400 Bad Request` with `title: "Validation failed"` and `errors: ["field: message"]`; stale/concurrent updates are `409 Conflict`; missing owned resources are `404 Not Found`.
-
-CORS is not configured: `WebMvcConfig` only registers the current-user argument resolver, and `SecurityConfig` has no `CorsConfigurationSource`/`.cors(...)`. Therefore the deployed frontend origin is not confirmed as browser-compatible for authenticated requests or preflight.
+- The project uses Spring Boot `3.5.7` and Java 21.
+- `WebMvcConfig` registers the current-user argument resolver. There is no `CorsConfig` or `CorsConfigurationSource` in this checkout, so browser CORS compatibility for an external frontend is not confirmed.
+- `/api/workspaces/**` requires `Authorization: Bearer <JWT>`. Missing authentication is rejected with `401 Unauthorized` by Spring Security.
+- Application errors use Spring `ProblemDetail` JSON. Validation failures are `400 Bad Request` with title `Validation failed` and an `errors` array containing `field: message` strings. Missing/unauthorized-owned resources return `404 Not Found`; stale workspace versions and locked furniture return `409 Conflict`.
 
 ## Workspace routes
 
-### `POST /api/workspaces` — 201 Created
+### `POST /api/workspaces` — `201 Created`
 
-Request fields: `name` (required, non-blank, max 200), `description` (nullable), `roomType` (nullable), `designStyle` (nullable), `room` (required): positive `width`, `depth`, `height`, `wallThickness`, `appearance` (required): non-blank `wallColor`, `floorColor`, `ceilingColor`, nullable `lightPreset`, and nullable `budget`/`currency`. The request has no explicit budget or currency validation annotations.
+`CreateWorkspaceRequest` fields:
 
-Example:
+- `name`: required, non-blank, max 200 characters.
+- `description`, `roomType`, `designStyle`, `budget`, and `currency`: nullable; no explicit validation annotations on these fields.
+- `room`: required; `width`, `depth`, `height`, and `wallThickness` are positive numbers.
+- `appearance`: required; `wallColor`, `floorColor`, and `ceilingColor` are non-blank; `lightPreset` is nullable.
 
-```json
-{"name":"Living Room","description":null,"roomType":"living","designStyle":"modern","room":{"width":4,"depth":5,"height":2.7,"wallThickness":0.15},"appearance":{"wallColor":"#FFFFFF","floorColor":"#8B5A2B","ceilingColor":"#FFFFFF","lightPreset":"day"},"budget":null,"currency":null}
-```
+The response is `WorkspaceDetailResponse`. A newly created workspace has `version: 0`, `furniture: []`, and `architecture: []`.
 
-Response is `WorkspaceDetailResponse` (same shape below), with `version: 0`, `furniture: []`, and `architecture: []`.
+### `GET /api/workspaces` — `200 OK`
 
-### `GET /api/workspaces` — 200 OK
+Returns only the authenticated user's summaries: `id`, `name`, `roomType`, and `designStyle`.
 
-Returns only the authenticated user's workspaces:
+### `GET /api/workspaces/{workspaceId}` — `200 OK`
 
-```json
-[{"id":"uuid","name":"Living Room","roomType":"living","designStyle":"modern"}]
-```
+Returns the owned workspace detail. The detail response contains `id`, `name`, nullable `description`, room geometry, appearance, nullable `budget` and `currency`, integer `version`, embedded `furniture`, and `architecture: []`. Furniture is embedded here; there is no dedicated furniture-list HTTP mapping.
 
-### `GET /api/workspaces/{workspaceId}` — 200 OK
+### `PATCH /api/workspaces/{workspaceId}` — `200 OK`
 
-Returns `WorkspaceDetailResponse` for an owned workspace. Other users receive `404`; missing authentication receives `401`.
-
-### `PATCH /api/workspaces/{workspaceId}` — 200 OK
-
-Request fields: nullable `name`, nullable `appearance` (`wallColor`, `floorColor`, `ceilingColor`, `lightPreset`), nullable `budget`, nullable `currency`, and required integer `expectedVersion`. Example: `{"name":"Renamed","appearance":{"wallColor":"#EEE","floorColor":"#654","ceilingColor":"#FFF","lightPreset":"night"},"expectedVersion":0}`. `room`/dimensions, `description`, `roomType`, and `designStyle` are not accepted by this DTO. A successful response is the updated detail response with incremented `version`; stale versions return `409`.
-
-### `WorkspaceDetailResponse`
-
-`{ id: UUID, name: string, description: string|null, room: { width: number, depth: number, height: number, wallThickness: number }, appearance: { wallColor: string, floorColor: string, ceilingColor: string, lightPreset: string }, budget: number|null, currency: string|null, version: integer, furniture: WorkspaceFurnitureResponse[], architecture: [] }`.
-
-Creation persists room geometry and appearance. Update persists appearance, but cannot update room geometry because `UpdateWorkspaceRequest` has no room field. Detail responses include furniture, but architecture is always an empty array and is not loaded from persistence.
+`UpdateWorkspaceRequest` accepts nullable `name`, nullable `appearance` (`wallColor`, `floorColor`, `ceilingColor`, `lightPreset`), nullable `budget`, nullable `currency`, and required integer `expectedVersion`. It does not accept `description`, `roomType`, `designStyle`, or room geometry. A successful update increments `version`; a stale version returns `409 Conflict`.
 
 ## Furniture routes
 
 Base path: `/api/workspaces/{workspaceId}/furniture`.
 
-- `GET` list: **not implemented** (no mapping in `WorkspaceFurnitureController`).
-- `POST` add: **201 Created**. Request `{catalogItemId: UUID, position: {x:number,y:number,z:number}, rotation?: {x,y,z}, scale?: {x,y,z}}`; `catalogItemId` and `position` are required, vectors are `XyzDto` (no DTO validation constraints), and omitted rotation/scale default to `(0,0,0)`/`(1,1,1)`. Response is `WorkspaceFurnitureResponse`.
-- `PATCH /{furnitureId}`: **200 OK**. Request fields `position?`, `rotation?`, `scale?`, `locked?`, `visible?`, `materialOverrides?`; response is `WorkspaceFurnitureResponse`.
-- `DELETE /{furnitureId}`: **204 No Content**.
+- `GET`: no dedicated mapping. Furniture is available through the workspace-detail response.
+- `POST`: `201 Created`; accepts required `catalogItemId` and `position`, with optional `rotation` and `scale`. Omitted values receive service defaults. The response contains `id`, `catalogItemId`, `position`, `rotation`, `scale`, `isLocked`, `isVisible`, and `materialOverrides`.
+- `PATCH /{furnitureId}`: `200 OK`; updates placement and optional lock/visibility/material override fields.
+- `DELETE /{furnitureId}`: `204 No Content`.
 
-`WorkspaceFurnitureResponse` fields are `id`, `catalogItemId`, `position`, `rotation`, `scale`, `isLocked`, `isVisible`, and `materialOverrides`. Child-resource ownership is enforced by the application services; non-owned/missing resources resolve to `404`.
+Furniture child-resource ownership is enforced by the application services; missing or non-owned resources resolve to `404 Not Found`.
 
-## Architecture routes
+## Architecture and catalog gaps
 
-No `AddArchitectureRequest`, `UpdateArchitectureRequest`, or `WorkspaceArchitectureResponse` DTO exists. No architecture controller, application ports, or architecture HTTP routes exist. The table/entity exists, but architecture CRUD is a confirmed contract gap.
+This checkout contains `WorkspaceArchitectureEntity`, its JPA repository, and architecture domain enums, but no `WorkspaceArchitectureController`, architecture request/response DTOs, application ports, or architecture HTTP mappings. Architecture CRUD is therefore a confirmed contract gap, and the `architecture` field in workspace details is always an empty list.
 
-## Catalog and deployment gaps
+The migrations present are `V1__create_core_schema.sql` and `V2__schema_corrections.sql`; there is no `V3__seed_catalog_items.sql`. Catalog lookup is internal (`existsById`); there is no public catalog HTTP endpoint for slug-to-UUID or model-path lookup. Seed data, if added in another environment, must not be interpreted as an HTTP catalog contract.
 
-There is no `V3__seed_catalog_items.sql` in the checked-in repository. The catalog module only exposes `existsById` internally through `CatalogItemQueryService`; there is no public slug-to-UUID/model-path endpoint. Frontend catalog mapping therefore has no supported HTTP contract.
+## Verification scope
 
-The repository's current integration tests use Testcontainers PostgreSQL. They require a working Docker environment and do not exercise the deployed Render service. No production request was claimed or performed.
+`WorkspaceApiIT` and the other `*IT` tests use Testcontainers PostgreSQL and exercise the application locally through Spring/MockMvc. They do not verify the deployed Render service. The Maven Surefire configuration explicitly includes `**/*IT.java`, so `mvn -B -ntp verify` executes `WorkspaceApiIT` along with the unit tests.
 
-## Exact verification commands
+In this sandbox, `mvn` is unavailable (`mvn: command not found`) and no Maven Wrapper is checked in, so Maven verification could not be executed here. The intended CI command is:
 
-- `mvn test` — not completed in this sandbox: Testcontainers could not find a valid Docker environment.
-- `mvn package` — run separately after test changes; result is recorded in the task summary.
+```text
+mvn -B -ntp verify
+```
+
+GitHub Actions provisions Temurin JDK 21, caches Maven dependencies, and runs this command on a Docker-capable GitHub-hosted runner for Testcontainers.
