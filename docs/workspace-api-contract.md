@@ -5,7 +5,7 @@ Source of truth: the checked-in Java controllers, DTOs, services, persistence ma
 ## Runtime and cross-cutting behavior
 
 - The project uses Spring Boot `3.5.7` and Java 21.
-- `WebMvcConfig` registers the current-user argument resolver. There is no `CorsConfig` or `CorsConfigurationSource` in this checkout, so browser CORS compatibility for an external frontend is not confirmed.
+- `WebMvcConfig` registers the current-user argument resolver. `CorsConfig` supplies Spring Security's `CorsConfigurationSource` for all routes. Permitted origin patterns are `http://localhost:5173`, `http://127.0.0.1:5173`, `http://localhost:3000`, `http://localhost:4173`, and `https://*.vercel.app`; credentials are allowed. Allowed methods are `GET`, `POST`, `PATCH`, `PUT`, `DELETE`, and `OPTIONS`, and allowed request headers are `Authorization`, `Content-Type`, and `X-Requested-With`.
 - `/api/workspaces/**` requires `Authorization: Bearer <JWT>`. Missing authentication is rejected with `401 Unauthorized` by Spring Security.
 - Application errors use Spring `ProblemDetail` JSON. Validation failures are `400 Bad Request` with title `Validation failed` and an `errors` array containing `field: message` strings. Missing/unauthorized-owned resources return `404 Not Found`; stale workspace versions and locked furniture return `409 Conflict`.
 
@@ -45,11 +45,18 @@ Base path: `/api/workspaces/{workspaceId}/furniture`.
 
 Furniture child-resource ownership is enforced by the application services; missing or non-owned resources resolve to `404 Not Found`.
 
-## Architecture and catalog gaps
+## Architecture and catalog behavior
 
-This checkout contains `WorkspaceArchitectureEntity`, its JPA repository, and architecture domain enums, but no `WorkspaceArchitectureController`, architecture request/response DTOs, application ports, or architecture HTTP mappings. Architecture CRUD is therefore a confirmed contract gap, and the `architecture` field in workspace details is always an empty list.
+Workspace architecture CRUD is exposed at `/api/workspaces/{workspaceId}/architecture`:
 
-The migrations present are `V1__create_core_schema.sql` and `V2__schema_corrections.sql`; there is no `V3__seed_catalog_items.sql`. Catalog lookup is internal (`existsById`); there is no public catalog HTTP endpoint for slug-to-UUID or model-path lookup. Seed data, if added in another environment, must not be interpreted as an HTTP catalog contract.
+- `GET`: lists the workspace's doors and windows.
+- `POST`: creates an element from `elementType`, `wall`, `alongWall`, `fromFloor`, `width`, and `height`; returns `201 Created`.
+- `PATCH /{architectureId}`: updates the optional `offset` and `dimensions` objects.
+- `DELETE /{architectureId}`: removes the element; returns `204 No Content`.
+
+The architecture application and persistence layers enforce workspace ownership through the authenticated user context. The workspace detail response still includes an `architecture` collection, while architecture changes are managed through the dedicated child-resource endpoints.
+
+The repository includes `V3__seed_catalog_items.sql`, but no catalog HTTP controller or public catalog route is present. Catalog lookup remains internal (`existsById`); seed data must not be interpreted as an HTTP catalog contract for slug-to-UUID or model-path lookup.
 
 ## Verification scope
 
