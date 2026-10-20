@@ -26,6 +26,7 @@ class OptimisticLockingIT extends PostgresIntegrationTest {
                 .userId(UUID.randomUUID()).name("Original")
                 .roomWidth(4).roomDepth(5).roomHeight(2.7).wallThickness(0.15)
                 .wallColor("#FFFFFF").floorColor("#8B5A2B").ceilingColor("#FFFFFF")
+                .lightPreset("day")
                 .build();
         fresh.setId(UUID.randomUUID());
         UUID id = jpaRepository.saveAndFlush(fresh).getId();
