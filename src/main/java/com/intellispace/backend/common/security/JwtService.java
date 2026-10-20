@@ -19,6 +19,10 @@ public class JwtService {
     private final Duration expiration;
 
     public JwtService(JwtProperties properties) {
+        if (properties.getSecret() == null || properties.getSecret().isBlank()) {
+            throw new IllegalStateException(
+                    "jwt.secret is required. Set JWT_SECRET or provide jwt.secret in application.properties.");
+        }
         byte[] keyBytes;
         try {
             keyBytes = Base64.getDecoder().decode(properties.getSecret());
