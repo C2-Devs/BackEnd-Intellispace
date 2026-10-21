@@ -22,7 +22,7 @@ class WorkspaceApplicationServiceIT extends PostgresIntegrationTest {
 
     @Test
     void updateWorkspace_rejectsAStaleClientSubmittedVersion() {
-        UUID ownerId = UUID.randomUUID();
+        UUID ownerId = insertTestUser();
         Workspace created = workspaceApplicationService.createWorkspace(new CreateWorkspaceCommand(
                 ownerId, "Living Room", null, null, null,
                 new RoomGeometry(4, 5, 2.7, 0.15),
