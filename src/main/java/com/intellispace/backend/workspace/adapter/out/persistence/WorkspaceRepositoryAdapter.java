@@ -24,7 +24,7 @@ public class WorkspaceRepositoryAdapter implements WorkspaceRepository {
         WorkspaceEntity entity = jpaRepository.findById(workspace.getId())
                 .map(existing -> mapper.updateEntity(existing, workspace))
                 .orElseGet(() -> mapper.toNewEntity(workspace));
-        return mapper.toDomain(jpaRepository.save(entity));
+        return mapper.toDomain(jpaRepository.saveAndFlush(entity));
     }
 
     @Override

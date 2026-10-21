@@ -27,7 +27,8 @@ class JsonbAndNativeEnumMappingIT extends PostgresIntegrationTest {
     void materialOverrides_roundTripsThroughJsonb() {
         UUID workspaceId = persistTestWorkspace();
         WorkspaceFurnitureEntity entity = WorkspaceFurnitureEntity.builder()
-                .workspaceId(workspaceId).catalogItemId(UUID.randomUUID())
+                .workspaceId(workspaceId).catalogItemId(insertTestCatalogItem())
+                .scaleX(1).scaleY(1).scaleZ(1)
                 .materialOverrides(Map.of("body", Map.of("color", "#334455", "material", "velvet")))
                 .build();
         entity.setId(UUID.randomUUID());
@@ -58,9 +59,10 @@ class JsonbAndNativeEnumMappingIT extends PostgresIntegrationTest {
 
     private UUID persistTestWorkspace() {
         WorkspaceEntity workspace = WorkspaceEntity.builder()
-                .userId(UUID.randomUUID()).name("Fixture")
+                .userId(insertTestUser()).name("Fixture")
                 .roomWidth(4).roomDepth(5).roomHeight(2.7).wallThickness(0.15)
                 .wallColor("#FFFFFF").floorColor("#8B5A2B").ceilingColor("#FFFFFF")
+                .lightPreset("day")
                 .build();
         workspace.setId(UUID.randomUUID());
         return entityManager.persistAndFlush(workspace).getId();

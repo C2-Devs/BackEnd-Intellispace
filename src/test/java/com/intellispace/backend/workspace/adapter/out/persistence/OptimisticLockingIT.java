@@ -23,9 +23,10 @@ class OptimisticLockingIT extends PostgresIntegrationTest {
     @Test
     void hibernateVersionCheck_rejectsAConcurrentlyStaleWrite() {
         WorkspaceEntity fresh = WorkspaceEntity.builder()
-                .userId(UUID.randomUUID()).name("Original")
+                .userId(insertTestUser()).name("Original")
                 .roomWidth(4).roomDepth(5).roomHeight(2.7).wallThickness(0.15)
                 .wallColor("#FFFFFF").floorColor("#8B5A2B").ceilingColor("#FFFFFF")
+                .lightPreset("day")
                 .build();
         fresh.setId(UUID.randomUUID());
         UUID id = jpaRepository.saveAndFlush(fresh).getId();
@@ -36,9 +37,11 @@ class OptimisticLockingIT extends PostgresIntegrationTest {
         WorkspaceEntity readByRequestA = jpaRepository.findById(id).orElseThrow();
         entityManager.clear();
         WorkspaceEntity readByRequestB = jpaRepository.findById(id).orElseThrow();
+        entityManager.detach(readByRequestB); // Preserve request B's stale version-0 snapshot.
 
         readByRequestA.setName("Changed by A");
         jpaRepository.saveAndFlush(readByRequestA); // DB moves from version 0 to version 1
+        entityManager.clear(); // Do not let request B merge into A's managed entity.
 
         readByRequestB.setName("Changed by B");
         // readByRequestB still carries version 0 in memory. Hibernate generates

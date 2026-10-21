@@ -63,6 +63,37 @@ class WorkspaceApiIT extends PostgresIntegrationTest {
                 .andExpect(status().isConflict());
     }
 
+    @Test
+    void listReturnsOnlyOwnedWorkspacesAndValidationUsesProblemDetail() throws Exception {
+        String ownerToken = registerAndGetToken("list-owner@test.com");
+        String otherToken = registerAndGetToken("list-other@test.com");
+
+        String createBody = """
+            {"name":"Owner Room","room":{"width":4,"depth":5,"height":2.7,"wallThickness":0.15},
+             "appearance":{"wallColor":"#FFFFFF","floorColor":"#8B5A2B","ceilingColor":"#FFFFFF","lightPreset":"day"}}""";
+        mockMvc.perform(post("/api/workspaces")
+                        .header("Authorization", "Bearer " + ownerToken)
+                        .contentType(MediaType.APPLICATION_JSON).content(createBody))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/workspaces").header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("Owner Room"))
+                .andExpect(jsonPath("$[0].id").isNotEmpty());
+
+        mockMvc.perform(get("/api/workspaces").header("Authorization", "Bearer " + otherToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isEmpty());
+
+        mockMvc.perform(post("/api/workspaces")
+                        .header("Authorization", "Bearer " + ownerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"\",\"room\":null,\"appearance\":null}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Validation failed"))
+                .andExpect(jsonPath("$.errors").isArray());
+    }
+
     private String registerAndGetToken(String email) throws Exception {
         String body = "{\"email\":\"" + email + "\",\"password\":\"correcthorsebattery\",\"displayName\":\"Test\"}";
         MvcResult result = mockMvc.perform(post("/api/auth/register")
