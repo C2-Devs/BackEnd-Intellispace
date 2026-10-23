@@ -49,7 +49,9 @@ public class WorkspaceApplicationService implements
             throw new StaleWorkspaceException(workspaceId, command.expectedVersion(), workspace.getVersion());
         }
         if (command.name() != null) workspace.rename(command.name());
+        if (command.geometry() != null) workspace.updateGeometry(command.geometry());
         if (command.appearance() != null) workspace.updateAppearance(command.appearance());
+        if (command.editorState() != null) workspace.updateEditorState(command.editorState());
         if (command.budget() != null) workspace.updateBudget(command.budget());
         // If another request commits a change to this same row between the check above and this
         // save, Hibernate's own @Version mechanism (UPDATE ... WHERE version = ?) still catches

@@ -27,6 +27,7 @@ public class WorkspaceMapper {
                 .lightPreset(workspace.getAppearance().lightPreset())
                 .budget(workspace.getBudget().map(Money::amount).orElse(null))
                 .currency(workspace.getBudget().map(Money::currency).orElse("INR"))
+                .editorState(workspace.getEditorState())
                 .build();
         entity.setId(workspace.getId()); // id is managed by the domain, not Hibernate
         return entity;
@@ -45,6 +46,7 @@ public class WorkspaceMapper {
         existing.setFloorColor(workspace.getAppearance().floorColor());
         existing.setCeilingColor(workspace.getAppearance().ceilingColor());
         existing.setLightPreset(workspace.getAppearance().lightPreset());
+        existing.setEditorState(workspace.getEditorState());
         existing.setBudget(workspace.getBudget().map(Money::amount).orElse(null));
         existing.setCurrency(workspace.getBudget().map(Money::currency).orElse(existing.getCurrency()));
         return existing; // id, version, createdAt, updatedAt: never touched — Hibernate still owns these
@@ -56,8 +58,11 @@ public class WorkspaceMapper {
         RoomAppearance appearance = new RoomAppearance(entity.getWallColor(), entity.getFloorColor(),
                 entity.getCeilingColor(), entity.getLightPreset());
         Money budget = entity.getBudget() != null ? new Money(entity.getBudget(), entity.getCurrency()) : null;
-        return Workspace.reconstruct(entity.getId(), entity.getUserId(), entity.getName(), entity.getDescription(),
+        Workspace workspace = Workspace.reconstruct(
+                entity.getId(), entity.getUserId(), entity.getName(), entity.getDescription(),
                 entity.getRoomType(), entity.getDesignStyle(), geometry, appearance, budget, entity.getVersion());
+        workspace.updateEditorState(entity.getEditorState());
+        return workspace;
     }
 
 }

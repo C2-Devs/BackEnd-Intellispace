@@ -24,7 +24,11 @@ public class WorkspaceWebMapper {
                 ? new RoomAppearance(r.appearance().wallColor(), r.appearance().floorColor(), r.appearance().ceilingColor(), r.appearance().lightPreset())
                 : null;
         Money budget = r.budget() != null ? new Money(r.budget(), r.currency()) : null;
-        return new UpdateWorkspaceCommand(r.name(), appearance, budget, r.expectedVersion());
+        RoomGeometry geometry = r.room() != null
+                ? new RoomGeometry(r.room().width(), r.room().depth(), r.room().height(), r.room().wallThickness())
+                : null;
+        return new UpdateWorkspaceCommand(
+                r.name(), appearance, budget, r.expectedVersion(), geometry, r.editorState());
     }
 
     public WorkspaceSummaryResponse toSummaryResponse(Workspace w) {
@@ -42,7 +46,8 @@ public class WorkspaceWebMapper {
                 w.getBudget().map(Money::currency).orElse(null),
                 w.getVersion(),
                 furniture.stream().map(this::toResponse).toList(),
-                List.of()
+                List.of(),
+                w.getEditorState()
         );
     }
 

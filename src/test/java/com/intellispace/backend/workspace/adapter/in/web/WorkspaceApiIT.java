@@ -94,6 +94,60 @@ class WorkspaceApiIT extends PostgresIntegrationTest {
                 .andExpect(jsonPath("$.errors").isArray());
     }
 
+    @Test
+    void editorStateAndRoomGeometryRoundTripThroughVersionedPatch() throws Exception {
+        String token = registerAndGetToken("editor-state@test.com");
+        String createBody = """
+            {"name":"Editor Snapshot",
+             "room":{"width":4,"depth":5,"height":2.7,"wallThickness":0.15},
+             "appearance":{"wallColor":"#FFFFFF","floorColor":"#8B5A2B","ceilingColor":"#FFFFFF","lightPreset":"day"}}
+            """;
+
+        MvcResult created = mockMvc.perform(post("/api/workspaces")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON).content(createBody))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.version").value(0))
+                .andReturn();
+
+        UUID workspaceId = UUID.fromString(
+                objectMapper.readTree(created.getResponse().getContentAsString()).get("id").asText());
+
+        String editorState = """
+            {
+              "currentTemplate":"modern-studio",
+              "room":{"floorMaterial":"floor-2","wallMaterial":"warmPaint"},
+              "windows":[{"id":"window-1","wall":"back","position":0.5,"width":2.0,"height":1.5}],
+              "doors":[{"id":"door-1","wall":"left","position":0.2,"width":1.0,"height":2.1}],
+              "structures":[{"id":"partition-1","type":"partition","position":[1.0,1.2,0.0]}],
+              "lightPreset":"day"
+            }
+            """;
+
+        mockMvc.perform(patch("/api/workspaces/" + workspaceId)
+                        .header("Authorization", "Bearer " + token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"room\":{\"width\":7.5,\"depth\":6.25,\"height\":3.1,\"wallThickness\":0.18},"
+                                + "\"editorState\":" + editorState + ",\"expectedVersion\":0}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.version").value(1))
+                .andExpect(jsonPath("$.room.width").value(7.5))
+                .andExpect(jsonPath("$.room.depth").value(6.25))
+                .andExpect(jsonPath("$.room.height").value(3.1))
+                .andExpect(jsonPath("$.editorState.currentTemplate").value("modern-studio"))
+                .andExpect(jsonPath("$.editorState.windows[0].id").value("window-1"))
+                .andExpect(jsonPath("$.editorState.doors[0].id").value("door-1"))
+                .andExpect(jsonPath("$.editorState.structures[0].type").value("partition"));
+
+        mockMvc.perform(get("/api/workspaces/" + workspaceId)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.version").value(1))
+                .andExpect(jsonPath("$.room.width").value(7.5))
+                .andExpect(jsonPath("$.editorState.currentTemplate").value("modern-studio"))
+                .andExpect(jsonPath("$.editorState.windows[0].width").value(2.0));
+    }
+
     private String registerAndGetToken(String email) throws Exception {
         String body = "{\"email\":\"" + email + "\",\"password\":\"correcthorsebattery\",\"displayName\":\"Test\"}";
         MvcResult result = mockMvc.perform(post("/api/auth/register")
