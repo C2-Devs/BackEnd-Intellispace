@@ -3,11 +3,15 @@ package com.intellispace.backend.workspace.adapter.out.persistence;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 @Entity
 @Table(name = "workspace")
@@ -69,6 +73,10 @@ public class WorkspaceEntity {
     @Column(length = 3)
     private String currency;
 
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "editor_state", columnDefinition = "jsonb", nullable = false)
+    private Map<String, Object> editorState = new LinkedHashMap<>();
+
     /** Hibernate-managed optimistic-lock counter. Never a constructor/builder parameter. */
     @Version
     @Column(nullable = false)
@@ -90,7 +98,7 @@ public class WorkspaceEntity {
     public WorkspaceEntity(UUID userId, String name, String description, String roomType, String designStyle,
                            double roomWidth, double roomDepth, double roomHeight, double wallThickness,
                            String wallColor, String floorColor, String ceilingColor, String lightPreset,
-                           BigDecimal budget, String currency) {
+                           BigDecimal budget, String currency, Map<String, Object> editorState) {
         this.userId = userId;
         this.name = name;
         this.description = description;
@@ -106,6 +114,9 @@ public class WorkspaceEntity {
         this.lightPreset = lightPreset;
         this.budget = budget;
         this.currency = currency;
+        this.editorState = editorState == null
+                ? new LinkedHashMap<>()
+                : new LinkedHashMap<>(editorState);
     }
 
 }

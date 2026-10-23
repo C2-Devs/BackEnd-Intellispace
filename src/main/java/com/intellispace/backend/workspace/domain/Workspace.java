@@ -6,6 +6,9 @@ import com.intellispace.backend.workspace.domain.Record.RoomGeometry;
 
 import java.util.UUID;
 import java.util.Optional;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.Collections;
 
 public class Workspace {
 
@@ -18,6 +21,7 @@ public class Workspace {
     private RoomGeometry geometry;
     private RoomAppearance appearance;
     private Money budget;
+    private Map<String, Object> editorState = Map.of();
     private final int version;
 
     private Workspace(UUID id, UUID ownerId, String name, String description, String roomType,
@@ -60,6 +64,16 @@ public class Workspace {
         this.budget = newBudget; // null is valid: it means "no budget set"
     }
 
+    public void updateGeometry(RoomGeometry newGeometry) {
+        this.geometry = requireNonNull(newGeometry, "geometry");
+    }
+
+    public void updateEditorState(Map<String, Object> newEditorState) {
+        this.editorState = newEditorState == null
+                ? Map.of()
+                : Collections.unmodifiableMap(new LinkedHashMap<>(newEditorState));
+    }
+
     private static String requireName(String name) {
         if (name == null || name.isBlank()) {
             throw new IllegalArgumentException("Workspace name must not be blank");
@@ -86,6 +100,7 @@ public class Workspace {
     public RoomGeometry getGeometry() { return geometry; }
     public RoomAppearance getAppearance() { return appearance; }
     public Optional<Money> getBudget() { return Optional.ofNullable(budget); }
+    public Map<String, Object> getEditorState() { return editorState; }
 
     @Override
     public boolean equals(Object o) {
