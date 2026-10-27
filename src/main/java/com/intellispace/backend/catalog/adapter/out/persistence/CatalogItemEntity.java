@@ -40,6 +40,12 @@ public class CatalogItemEntity {
     @Column(name = "model_path", columnDefinition = "TEXT")
     private String modelPath;
 
+    @Column(name = "workspace_id")
+    private UUID workspaceId;
+
+    @Column(name = "thumbnail_path", columnDefinition = "TEXT")
+    private String thumbnailPath;
+
     @Column(name = "base_width")
     private Double baseWidth;
 
