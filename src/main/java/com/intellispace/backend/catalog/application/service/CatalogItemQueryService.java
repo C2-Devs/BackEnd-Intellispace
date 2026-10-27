@@ -24,7 +24,7 @@ public class CatalogItemQueryService implements CatalogItemQueryUseCase {
 
     @Override
     public List<CatalogItem> listCatalogItems() {
-        return jpaRepository.findAll(
+        return jpaRepository.findAllByWorkspaceIdIsNull(
                         Sort.by(Sort.Order.asc("category"), Sort.Order.asc("name")))
                 .stream()
                 .map(entity -> new CatalogItem(

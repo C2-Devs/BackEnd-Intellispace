@@ -32,7 +32,7 @@ public class WorkspaceFurnitureApplicationService implements
     @Override
     public WorkspaceFurniture addFurniture(UUID requestingUserId, AddFurnitureCommand command) {
         requireOwnedWorkspace(command.workspaceId(), requestingUserId);
-        if (!catalogItemLookupPort.exists(command.catalogItemId())) {
+        if (!catalogItemLookupPort.isAvailableInWorkspace(command.catalogItemId(), command.workspaceId())) {
             throw new CatalogItemNotFoundException(command.catalogItemId());
         }
         WorkspaceFurniture furniture = WorkspaceFurniture.place(
