@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -45,13 +47,18 @@ public class CustomFurnitureService {
     public List<CustomFurnitureResponse> list(UUID userId, UUID workspaceId) {
         requireOwnedWorkspace(userId, workspaceId);
 
-        return catalogRepository
-                .findAllByWorkspaceId(
-                        workspaceId,
-                        Sort.by(Sort.Direction.DESC, "createdAt"))
-                .stream()
-                .map(this::toResponse)
-                .toList();
+        List<CatalogItemEntity> items = catalogRepository.findAllByWorkspaceId(
+                workspaceId, Sort.by(Sort.Direction.DESC, "createdAt"));
+        if (items.isEmpty()) return List.of();
+
+        // Signed URLs are network I/O; resolve them concurrently on virtual threads.
+        // SupabaseStorageClient bounds actual outbound concurrency.
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            List<CompletableFuture<CustomFurnitureResponse>> tasks = items.stream()
+                    .map(item -> CompletableFuture.supplyAsync(() -> toResponse(item), executor))
+                    .toList();
+            return tasks.stream().map(CompletableFuture::join).toList();
+        }
     }
 
     public CustomFurnitureResponse upload(
