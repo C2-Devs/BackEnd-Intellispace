@@ -1,6 +1,7 @@
 package com.intellispace.backend.common.security;
 
 import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,7 @@ public class JwtService {
 
     private final SecretKey signingKey;
     private final Duration expiration;
+    private final JwtParser jwtParser;
 
     public JwtService(JwtProperties properties) {
         if (properties.getSecret() == null || properties.getSecret().isBlank()) {
@@ -36,8 +38,17 @@ public class JwtService {
                     "jwt.secret must decode to at least 32 bytes (256 bits) for HMAC-SHA256. " +
                     "Decoded length was " + keyBytes.length + " bytes.");
         }
+        long expirationMinutes = properties.getExpirationMinutes();
+        if (expirationMinutes <= 0) {
+            throw new IllegalStateException(
+                    "jwt.expiration-minutes must be greater than zero.");
+        }
+
         this.signingKey = Keys.hmacShaKeyFor(keyBytes);
-        this.expiration = Duration.ofMinutes(properties.getExpirationMinutes());
+        this.expiration = Duration.ofMinutes(expirationMinutes);
+        this.jwtParser = Jwts.parser()
+                .verifyWith(signingKey)
+                .build();
     }
 
     public String issueToken(UUID userId) {
@@ -52,12 +63,15 @@ public class JwtService {
 
     public UUID validateAndGetUserId(String token) {
         try {
-            String subject = Jwts.parser()
-                    .verifyWith(signingKey)
-                    .build()
+            String subject = jwtParser
                     .parseSignedClaims(token)
                     .getPayload()
                     .getSubject();
+
+            if (subject == null || subject.isBlank()) {
+                throw new IllegalArgumentException("JWT subject is missing");
+            }
+
             return UUID.fromString(subject);
         } catch (JwtException | IllegalArgumentException e) {
             throw new InvalidTokenException(e);
