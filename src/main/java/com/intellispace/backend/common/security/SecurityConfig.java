@@ -9,7 +9,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -29,9 +28,9 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CorsConfigurationSource corsConfigurationSource;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
+    public SecurityConfig(JwtService jwtService,
                           CorsConfigurationSource corsConfigurationSource) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtService);
         this.corsConfigurationSource = corsConfigurationSource;
     }
 
@@ -66,14 +65,6 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
-    }
-
-    @Bean
-    public FilterRegistrationBean<JwtAuthenticationFilter> jwtAuthenticationFilterRegistration() {
-        FilterRegistrationBean<JwtAuthenticationFilter> registration = new FilterRegistrationBean<>();
-        registration.setFilter(jwtAuthenticationFilter);
-        registration.setEnabled(false);
-        return registration;
     }
 
     @Bean

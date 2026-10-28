@@ -13,10 +13,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-@Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final Logger LOG =
             LoggerFactory.getLogger(JwtAuthenticationFilter.class);
@@ -50,7 +48,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         userId, null, List.of());
                 authentication.setDetails(
                         new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                var securityContext = SecurityContextHolder.createEmptyContext();
+                securityContext.setAuthentication(authentication);
+                SecurityContextHolder.setContext(securityContext);
 
                 if (diagnosticRequest) {
                     LOG.info(
