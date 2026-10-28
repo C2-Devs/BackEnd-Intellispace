@@ -2,6 +2,11 @@ package com.intellispace.backend.common.security;
 
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -19,6 +24,8 @@ import org.springframework.web.cors.CorsConfigurationSource;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private static final Logger LOG = LoggerFactory.getLogger(SecurityConfig.class);
+
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CorsConfigurationSource corsConfigurationSource;
 
@@ -35,7 +42,24 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(
-                        (request, response, authException) -> response.sendError(HttpServletResponse.SC_UNAUTHORIZED)))
+                        (request, response, authException) -> {
+                            Authentication authentication =
+                                    SecurityContextHolder.getContext().getAuthentication();
+
+                            LOG.error(
+                                    "Security 401 diagnostic: method={}, path={}, exception={}, "
+                                            + "authentication={}, authenticated={}, principalType={}",
+                                    request.getMethod(),
+                                    request.getRequestURI(),
+                                    authException.getClass().getSimpleName(),
+                                    authentication == null ? "null" : authentication.getClass().getSimpleName(),
+                                    authentication != null && authentication.isAuthenticated(),
+                                    authentication == null || authentication.getPrincipal() == null
+                                            ? "null"
+                                            : authentication.getPrincipal().getClass().getSimpleName());
+
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                        }))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/api/catalog/**", "/actuator/health", "/actuator/info",
                                 "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
